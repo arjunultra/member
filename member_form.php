@@ -162,19 +162,19 @@ mysqli_close($conn);
             <label for="member_name">Member Name:</label>
             <input class="form-control" type="text" id="member_name" name="member_name"
                 value="<?php echo $update_name; ?>">
-            <span><?php echo $nameError; ?></span>
+            <span class="text-bg-danger"><?php echo $nameError; ?></span>
         </div>
         <div>
             <label for="member_address">Address:</label>
             <input class="form-control" type="text" id="member_address" name="member_address"
                 value="<?php echo $update_address; ?>">
-            <span><?php echo $addressError; ?></span>
+            <span class="text-bg-danger"><?php echo $addressError; ?></span>
         </div>
         <div>
             <label for="member_mobile">Mobile:</label>
             <input class="form-control" type="tel" id="member_mobile" name="member_mobile" pattern="\d{10}"
                 value="<?php echo $update_mobile; ?>">
-            <span><?php echo $mobileError; ?></span>
+            <span class="text-bg-danger"><?php echo $mobileError; ?></span>
         </div>
         <div>
             <label for="branch_name">Branch:</label>
@@ -182,7 +182,7 @@ mysqli_close($conn);
                 <option value="" selected>Select a Branch</option>
                 <?php echo $branchOptions; ?>
             </select>
-            <span><?php echo $branchError; ?></span>
+            <span class="text-bg-danger"><?php echo $branchError; ?></span>
         </div>
         <div>
             <label for="zone_name">Zone:</label>
@@ -191,10 +191,10 @@ mysqli_close($conn);
                 <?php echo $zoneOptions; ?>
                 <!-- Dynamically populated zones go here -->
             </select>
-            <span><?php echo $zoneNameError; ?></span>
+            <span class="text-bg-danger"><?php echo $zoneNameError; ?></span>
         </div>
         <input type="hidden" name="update_id" value="<?php echo $update_id; ?>">
-        <button type="submit">Submit</button>
+        <button class="btn btn-primary mt-5" type="submit">Submit</button>
     </form>
 </body>
 
