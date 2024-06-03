@@ -130,5 +130,4 @@ mysqli_close($conn);
         </div>
         <br>
         <input class="btn btn-primary" type="submit" value="Submit">
-        <a target="_blank" class="btn btn-dark" href="products-table.php">Go to Table</a>
     </form>
