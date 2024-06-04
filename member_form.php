@@ -27,8 +27,40 @@ $nameError = $addressError = $mobileError = $branchError = $zoneNameError = "";
 $update_id = $update_name = $update_address = $update_mobile = $update_branch = $update_zone_name = "";
 $isValid = false;
 
-// Fetch member data for update if update_id is set
-if (isset($_GET['update_id'])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Form has been submitted, process the data
+    $memberName = mysqli_real_escape_string($conn, $_POST['member_name']);
+    $memberAddress = mysqli_real_escape_string($conn, $_POST['member_address']);
+    $memberMobile = mysqli_real_escape_string($conn, $_POST['member_mobile']);
+    $zoneName = mysqli_real_escape_string($conn, $_POST['zone_name']);
+    $branchName = mysqli_real_escape_string($conn, $_POST['branch_name']);
+    $update_id = isset($_POST['update_id']) ? mysqli_real_escape_string($conn, $_POST['update_id']) : "";
+    $isValid = true; // Assume data is valid to start
+
+    // Validation logic...
+
+    if ($isValid) {
+        // Determine if this is an insert or update operation
+        if (!empty($update_id)) {
+            // Update operation
+            $stmt = mysqli_prepare($conn, "UPDATE memberform SET member_name=?, member_address=?, mobile_number=?, branch_name=?, member_zone=? WHERE id=?");
+            mysqli_stmt_bind_param($stmt, "sssssi", $memberName, $memberAddress, $memberMobile, $branchName, $zoneName, $update_id);
+        } else {
+            // Insert operation
+            $stmt = mysqli_prepare($conn, "INSERT INTO memberform (member_name, member_address, mobile_number, branch_name, member_zone) VALUES (?, ?, ?, ?, ?)");
+            mysqli_stmt_bind_param($stmt, "sssss", $memberName, $memberAddress, $memberMobile, $branchName, $zoneName);
+        }
+
+        if (mysqli_stmt_execute($stmt)) {
+            $message = !empty($update_id) ? 'Record updated successfully.' : 'New record created successfully.';
+            echo "<script>alert('$message'); window.location.href = 'member_table.php';</script>";
+        } else {
+            echo "Error: " . mysqli_error($conn);
+        }
+        mysqli_stmt_close($stmt);
+    }
+} else if (isset($_GET['update_id'])) {
+    // Page loaded for update, fetch existing data
     $update_id = mysqli_real_escape_string($conn, $_GET['update_id']);
     $query = "SELECT * FROM memberform WHERE id = ?";
     $stmt = mysqli_prepare($conn, $query);
@@ -39,113 +71,29 @@ if (isset($_GET['update_id'])) {
     if ($row = mysqli_fetch_assoc($result)) {
         $update_name = $row['member_name'];
         $update_address = $row['member_address'];
-        $update_mobile = $row['mobile_number']; // Corrected column name from 'member_mobile' to 'mobile_number'
-        $update_zone_name = $row['member_zone']; // Corrected column name from 'zone_name' to 'member_zone'
+        $update_mobile = $row['mobile_number'];
+        $update_zone_name = $row['member_zone'];
         $update_branch = $row['branch_name'];
     }
     mysqli_stmt_close($stmt);
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $memberName = mysqli_real_escape_string($conn, $_POST['member_name']);
-    $memberAddress = mysqli_real_escape_string($conn, $_POST['member_address']);
-    $memberMobile = mysqli_real_escape_string($conn, $_POST['member_mobile']);
-    $zoneName = mysqli_real_escape_string($conn, $_POST['zone_name']);
-    $branchName = mysqli_real_escape_string($conn, $_POST['branch_name']);
-    $isValid = true;
-
-    // Create Table
-    $sqlCreateMember = "CREATE TABLE IF NOT EXISTS memberform (
-        id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        member_name VARCHAR(255) NOT NULL,
-        member_address VARCHAR(255) NOT NULL,
-        mobile_number BIGINT(20) NOT NULL,
-        branch_name VARCHAR(255) NOT NULL,
-        member_zone VARCHAR(255) NOT NULL
-    )";
-    if (!mysqli_query($conn, $sqlCreateMember)) {
-        echo "Error creating members form table: " . mysqli_error($conn);
-    }
-
-    // Validate member name
-    if (empty($memberName)) {
-        $nameError = "Member name is required.";
-        $isValid = false;
-    } elseif (!preg_match("/^[a-zA-Z0-9 \-_]+$/", $memberName)) {
-        $nameError = "Member name contains invalid characters."; // Corrected variable name from $zoneNameError to $nameError
-        $isValid = false;
-    }
-
-    // Validate member address
-    if (empty($memberAddress)) {
-        $addressError = "Member address is required.";
-        $isValid = false;
-    }
-
-    // Validate member mobile
-    if (empty($memberMobile)) {
-        $mobileError = "Member mobile number is required.";
-        $isValid = false;
-    } elseif (!preg_match("/^\d{10}$/", $memberMobile)) {
-        $mobileError = "Invalid mobile number format.";
-        $isValid = false;
-    }
-
-    // Validate zone name
-    if (empty($zoneName)) {
-        $zoneNameError = "Zone name is required.";
-        $isValid = false;
-    } elseif (!preg_match("/^[a-zA-Z0-9 \-_]+$/", $zoneName)) {
-        $zoneNameError = "Zone name contains invalid characters.";
-        $isValid = false;
-    }
-
-    // Validate branch name
-    if (empty($branchName)) {
-        $branchError = "Branch name is required.";
-        $isValid = false;
-    }
-
-    if ($isValid) {
-        if (!empty($update_id)) {
-            // Perform an update operation
-            $stmt = mysqli_prepare($conn, "UPDATE memberform SET member_name=?, member_address=?, mobile_number=?, branch_name=?, member_zone=? WHERE id=?");
-            mysqli_stmt_bind_param($stmt, "sssssi", $memberName, $memberAddress, $memberMobile, $branchName, $zoneName, $update_id);
-        } else {
-            // Perform an insert operation
-            $stmt = mysqli_prepare($conn, "INSERT INTO memberform (member_name, member_address, mobile_number, branch_name, member_zone) VALUES (?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt, "sssss", $memberName, $memberAddress, $memberMobile, $branchName, $zoneName);
-        }
-
-        if (mysqli_stmt_execute($stmt)) {
-            $message = !empty($update_id) ? 'Record updated successfully.' : 'New record created successfully.';
-            echo "<script>alert('$message'); window.location.href = 'branch.php';</script>";
-        } else {
-            echo "Error: " . mysqli_error($conn);
-        }
-        mysqli_stmt_close($stmt);
-    }
-}
-
-// Fetch branch data from branch table
-$resultBranch = mysqli_query($conn, "SELECT * FROM branch");
+// Fetch branch data
 $branchOptions = "";
-
+$resultBranch = mysqli_query($conn, "SELECT * FROM branch");
 if (mysqli_num_rows($resultBranch) > 0) {
     while ($row = mysqli_fetch_assoc($resultBranch)) {
-        $branchId = $row['id'];
         $branchName = $row['branch_name'];
         $isSelected = ($update_branch === $branchName) ? "selected" : "";
         $branchOptions .= "<option value='$branchName' $isSelected>$branchName</option>";
     }
 }
-// Fetch zone data from myzone table
-$resultBranch = mysqli_query($conn, "SELECT * FROM myzone");
-$zoneOptions = "";
 
-if (mysqli_num_rows($resultBranch) > 0) {
-    while ($row = mysqli_fetch_assoc($resultBranch)) {
-        $zoneId = $row['id'];
+// Fetch zone data
+$zoneOptions = "";
+$resultZone = mysqli_query($conn, "SELECT * FROM myzone");
+if (mysqli_num_rows($resultZone) > 0) {
+    while ($row = mysqli_fetch_assoc($resultZone)) {
         $zoneName = $row['zone_name'];
         $isSelected = ($update_zone_name === $zoneName) ? "selected" : "";
         $zoneOptions .= "<option value='$zoneName' $isSelected>$zoneName</option>";
@@ -154,6 +102,7 @@ if (mysqli_num_rows($resultBranch) > 0) {
 
 mysqli_close($conn);
 ?>
+
 
 
 <body>
